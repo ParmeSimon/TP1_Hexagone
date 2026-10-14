@@ -1,0 +1,5 @@
+id,abonne,moyenPaiement
+u1,non,carte ****1234
+u2,oui,carte ****5678
+u3,oui,prelevement
+u4,non,carte ****9012

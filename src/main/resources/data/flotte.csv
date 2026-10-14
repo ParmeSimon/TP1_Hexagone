@@ -1,0 +1,7 @@
+id,type,disponible,motif
+V428,VELO,oui,
+V431,VELO,oui,
+V502,VELO,non,en maintenance
+T117,TROTTINETTE,oui,
+T118,TROTTINETTE,oui,
+T140,TROTTINETTE,non,batterie vide
