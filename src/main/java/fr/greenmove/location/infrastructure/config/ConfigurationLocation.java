@@ -1,8 +1,18 @@
 package fr.greenmove.location.infrastructure.config;
 
 import fr.greenmove.exterieur.FlotteEnMemoire;
-import fr.greenmove.location.domaine.Flotte;
+import fr.greenmove.exterieur.UsagersEnMemoire;
+import fr.greenmove.facturation.application.ConsulterImpayes;
+import fr.greenmove.location.application.ServiceLocation;
+import fr.greenmove.location.domaine.ports.*;
+import fr.greenmove.location.infrastructure.evenements.PublicationSurBusSpring;
 import fr.greenmove.location.infrastructure.flotte.FlotteSurSimulation;
+import fr.greenmove.location.infrastructure.horloge.HorlogeSysteme;
+import fr.greenmove.location.infrastructure.impayes.ImpayesParFacturation;
+import fr.greenmove.location.infrastructure.persistance.LocationJpaRepository;
+import fr.greenmove.location.infrastructure.persistance.LocationsJpa;
+import fr.greenmove.location.infrastructure.usagers.UsagersSurSimulation;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -25,31 +35,24 @@ public class ConfigurationLocation {
         return new FlotteSurSimulation(simulation);
     }
 
-    // Les suivants, à écrire sur le même modèle :
-    //
-    // @Bean
-    // Usagers usagers(UsagersEnMemoire simulation) { return new UsagersSurSimulation(simulation); }
-    //
-    // @Bean
-    // Horloge horloge() { return new HorlogeSysteme(); }
-    //
-    // @Bean
-    // Impayes impayes(ConsulterImpayes consulterImpayes) { return new ImpayesParFacturation(consulterImpayes); }
-    //
-    // @Bean
-    // PublicationEvenements publication(ApplicationEventPublisher bus) { return new PublicationSurBusSpring(bus); }
-    //
-    // @Bean
-    // Locations locations(LocationJpaRepository jpa) { return new LocationsJpa(jpa); }
-    //
-    // Puis le cas d'usage, qui reçoit les ports (les interfaces), jamais les adaptateurs :
-    //
-    // @Bean
-    // ServiceLocation serviceLocation(Locations locations, Flotte flotte, Usagers usagers, Impayes impayes,
-    //                                 PublicationEvenements publication, Horloge horloge) {
-    //     return new ServiceLocation(locations, flotte, usagers, impayes, publication, horloge);
-    // }
-    //
-    // Le contrôleur REST, lui, est annoté @RestController et reçoit ServiceLocation par constructeur, sous le type
-    // de ses ports entrants (DemarrerLocation, TerminerLocation, ConsulterLocation).
+     @Bean
+     Usagers usagers(UsagersEnMemoire simulation) { return new UsagersSurSimulation(simulation); }
+
+     @Bean
+     Horloge horloge() { return new HorlogeSysteme(); }
+
+     @Bean
+     Impayes impayes(ConsulterImpayes consulterImpayes) { return new ImpayesParFacturation(consulterImpayes); }
+
+     @Bean
+     PublicationEvenements publication(ApplicationEventPublisher bus) { return new PublicationSurBusSpring(bus); }
+
+     @Bean
+     Locations locations(LocationJpaRepository jpa) { return new LocationsJpa(jpa); }
+
+     @Bean
+     ServiceLocation serviceLocation(Locations locations, Flotte flotte, Usagers usagers, Impayes impayes,
+                                     PublicationEvenements publication, Horloge horloge) {
+         return new ServiceLocation(locations, flotte, usagers, impayes, publication, horloge);
+     }
 }
