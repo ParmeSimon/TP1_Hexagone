@@ -2,15 +2,17 @@ package fr.greenmove.facturation.infrastructure.config;
 
 import fr.greenmove.exterieur.PaiementSimule;
 import fr.greenmove.exterieur.UsagersEnMemoire;
-import fr.greenmove.facturation.application.ServiceFacturation;
-import fr.greenmove.facturation.domaine.Abonnements;
-import fr.greenmove.facturation.domaine.Factures;
-import fr.greenmove.facturation.domaine.GrilleTarifaire;
-import fr.greenmove.facturation.domaine.Paiement;
-import fr.greenmove.facturation.infrastructure.abonnements.AbonnementsSurSimulation;
-import fr.greenmove.facturation.infrastructure.paiement.PaiementSurSimulation;
-import fr.greenmove.facturation.infrastructure.persistance.FactureJpaRepository;
-import fr.greenmove.facturation.infrastructure.persistance.FacturesJpa;
+import fr.greenmove.facturation.application.EmettreFacture;
+import fr.greenmove.facturation.application.service.ServiceFacturation;
+import fr.greenmove.facturation.domaine.port.sortant.Abonnements;
+import fr.greenmove.facturation.domaine.port.sortant.Factures;
+import fr.greenmove.facturation.domaine.tarif.GrilleTarifaire;
+import fr.greenmove.facturation.domaine.port.sortant.Paiement;
+import fr.greenmove.facturation.infrastructure.secondaire.abonnements.AbonnementsSurSimulation;
+import fr.greenmove.facturation.infrastructure.primaire.evenements.EcouteurLocationTerminee;
+import fr.greenmove.facturation.infrastructure.secondaire.paiement.PaiementSurSimulation;
+import fr.greenmove.facturation.infrastructure.secondaire.persistance.FactureJpaRepository;
+import fr.greenmove.facturation.infrastructure.secondaire.persistance.FacturesJpa;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -54,5 +56,14 @@ public class ConfigurationFacturation {
     ServiceFacturation serviceFacturation(Factures factures, Paiement paiement, Abonnements abonnements,
                                           GrilleTarifaire grilleTarifaire) {
         return new ServiceFacturation(factures, paiement, abonnements, grilleTarifaire);
+    }
+
+    /**
+     * L'adaptateur primaire qui écoute le bus : déclaré comme bean pour que Spring y branche son
+     * {@code @EventListener}. Il reçoit le port entrant {@code EmettreFacture}, jamais le cas d'usage.
+     */
+    @Bean
+    EcouteurLocationTerminee ecouteurLocationTerminee(EmettreFacture emettreFacture) {
+        return new EcouteurLocationTerminee(emettreFacture);
     }
 }

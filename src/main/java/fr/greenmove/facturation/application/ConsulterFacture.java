@@ -1,7 +1,7 @@
 package fr.greenmove.facturation.application;
 
-import fr.greenmove.facturation.domaine.IdFacture;
-import fr.greenmove.facturation.domaine.IdLocation;
+import fr.greenmove.facturation.domaine.modele.IdFacture;
+import fr.greenmove.facturation.domaine.modele.IdLocation;
 
 import java.util.Optional;
 

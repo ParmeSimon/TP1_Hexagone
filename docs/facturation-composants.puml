@@ -1,0 +1,104 @@
+@startuml facturation-composants
+title Hexagone Facturation : ports, adaptateurs et communication avec Location
+
+skinparam shadowing false
+skinparam componentStyle rectangle
+skinparam defaultTextAlignment center
+left to right direction
+
+' Seuls figurent les elements presents dans le code.
+' Location est volontairement opaque : ses adaptateurs (PublicationEvenements, Impayes) sont dans l'autre moitie du TP.
+
+actor "Client HTTP" as CLIENT
+rectangle "Hexagone Location\n(voisin)" as LOC
+rectangle "Bus interne Spring\nApplicationEventPublisher" as BUS
+
+rectangle "HEXAGONE FACTURATION" as FACT {
+
+  package "infrastructure : adaptateurs primaires" as PRIM {
+    component "EcouteurLocationTerminee\n@EventListener" as ECOUTEUR
+    component "FactureController\nREST, annexe A" as CTRL
+  }
+
+  package "application : ports entrants" as PIN {
+    interface "EmettreFacture" as P_EMETTRE
+    interface "ConsulterFacture" as P_CONSULTER
+    interface "RegulariserFacture" as P_REGUL
+    interface "ConsulterImpayes\n(contrat avec Location)" as P_IMPAYES
+    component "ServiceFacturation\n(cas d'usage)" as SERVICE
+  }
+
+  package "domaine : le coeur, sans technique" as DOM {
+    component "Facture\n(agregat)" as FACTURE
+    component "Montant\n(value object, centimes)" as MONTANT
+    component "GrilleTarifaire\nGrilleTarifaireM01" as GRILLE
+    interface "Factures" as P_FACTURES
+    interface "Paiement" as P_PAIEMENT
+    interface "Abonnements" as P_ABO
+  }
+
+  package "infrastructure : adaptateurs secondaires" as SEC {
+    component "FacturesJpa\n+ FactureMapper\n+ FactureEntite" as A_FACTURES
+    component "PaiementSurSimulation" as A_PAIEMENT
+    component "AbonnementsSurSimulation" as A_ABO
+  }
+
+  component "ConfigurationFacturation\n(racine de composition)" as CONF
+}
+
+database "H2\ntable facture" as DB
+rectangle "PaiementSimule\n(prestataire)" as EXT_PAIEMENT
+rectangle "UsagersEnMemoire\n(compte usager)" as EXT_USAGERS
+
+' --- chemin 1 : l'evenement (asynchrone dans l'esprit, synchrone dans le processus)
+LOC -[#d9534f]-> BUS : <color:#d9534f>1. publie LocationTerminee
+BUS -[#d9534f]-> ECOUTEUR : <color:#d9534f>1. livre l'evenement
+
+' --- chemin 2 : l'appel synchrone
+LOC -[#0275d8]-> P_IMPAYES : <color:#0275d8>2. aUneFactureImpayee(idUsager)\n<color:#0275d8>depuis le port Impayes de Location
+
+' --- adaptateurs primaires -> ports entrants (ils appellent le port)
+ECOUTEUR --> P_EMETTRE : appelle
+CLIENT --> CTRL : HTTP
+CTRL --> P_CONSULTER : appelle
+CTRL --> P_REGUL : appelle
+
+' --- le cas d'usage implemente les ports entrants
+SERVICE ..|> P_EMETTRE
+SERVICE ..|> P_CONSULTER
+SERVICE ..|> P_REGUL
+SERVICE ..|> P_IMPAYES
+
+' --- le cas d'usage orchestre le domaine
+SERVICE --> FACTURE : decide
+SERVICE --> GRILLE : tarifer
+SERVICE --> P_FACTURES : utilise
+SERVICE --> P_PAIEMENT : utilise
+SERVICE --> P_ABO : utilise
+GRILLE --> MONTANT
+FACTURE --> MONTANT
+
+' --- les adaptateurs secondaires implementent les ports sortants (la fleche va vers le port)
+A_FACTURES ..|> P_FACTURES
+A_PAIEMENT ..|> P_PAIEMENT
+A_ABO ..|> P_ABO
+
+' --- vers les systemes exterieurs
+A_FACTURES --> DB : JPA
+A_PAIEMENT --> EXT_PAIEMENT : debiter()\nDebitRefuse devient ResultatPaiement.Refuse
+A_ABO --> EXT_USAGERS : parId()
+
+' --- cablage
+CONF ..> SERVICE : construit
+CONF ..> A_FACTURES : construit
+CONF ..> A_PAIEMENT : construit
+CONF ..> A_ABO : construit
+CONF ..> ECOUTEUR : construit
+
+note bottom of FACT
+  Regle : un adaptateur depend du port, jamais l'inverse.
+  Le domaine n'importe ni Spring, ni JPA, ni application, ni infrastructure.
+  Facturation ne voit de Location que son evenement publie.
+end note
+
+@enduml
