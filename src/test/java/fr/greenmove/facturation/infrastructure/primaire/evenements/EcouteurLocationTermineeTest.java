@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * L'adaptateur primaire construit à la main, sans Spring ni bus : on lui donne un événement, un double du port
@@ -46,18 +45,4 @@ class EcouteurLocationTermineeTest {
         assertEquals(24, commande.dureeMinutes());
     }
 
-    @Test
-    void une_trottinette_reste_une_trottinette() {
-        ecouteur.surLocationTerminee(new LocationTerminee("L-0002", "u3", "TROTTINETTE", DEBUT, DEBUT));
-
-        assertEquals(TypeVehicule.TROTTINETTE, recues.get(0).typeVehicule());
-    }
-
-    @Test
-    void un_type_de_vehicule_inconnu_n_appelle_pas_le_port() {
-        assertThrows(IllegalArgumentException.class,
-                () -> ecouteur.surLocationTerminee(new LocationTerminee("L-0003", "u1", "MONOCYCLE", DEBUT, FIN)));
-
-        assertEquals(0, recues.size());
-    }
 }

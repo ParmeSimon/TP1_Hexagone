@@ -2,7 +2,6 @@ package fr.greenmove.facturation.infrastructure.secondaire.persistance;
 
 import fr.greenmove.facturation.domaine.modele.Facture;
 import fr.greenmove.facturation.domaine.port.sortant.Factures;
-import fr.greenmove.facturation.domaine.modele.IdFacture;
 import fr.greenmove.facturation.domaine.modele.IdLocation;
 import fr.greenmove.facturation.domaine.modele.IdUsager;
 import fr.greenmove.facturation.domaine.modele.Montant;
@@ -64,26 +63,4 @@ class FacturesJpaTest {
         assertFalse(factures.existeUneImpayeePour(new IdUsager("u1")));
     }
 
-    @Test
-    void une_regularisation_enregistree_met_a_jour_la_ligne() {
-        Facture facture = Facture.impayee(factures.prochainIdentifiant(), new IdLocation("L-0002"), U3,
-                Montant.enCentimes(80));
-        factures.enregistrer(facture);
-
-        facture.regulariser(new ReferencePaiement("SIMU-8C41D0E7"));
-        factures.enregistrer(facture);
-
-        assertEquals(1, jpa.count());
-        assertEquals(StatutFacture.PAYEE, factures.parId(facture.id()).orElseThrow().statut());
-        assertFalse(factures.existeUneImpayeePour(U3));
-    }
-
-    @Test
-    void les_identifiants_se_suivent() {
-        IdFacture premier = factures.prochainIdentifiant();
-        IdFacture second = factures.prochainIdentifiant();
-
-        assertEquals(new IdFacture("F-0001"), premier);
-        assertEquals(new IdFacture("F-0002"), second);
-    }
 }

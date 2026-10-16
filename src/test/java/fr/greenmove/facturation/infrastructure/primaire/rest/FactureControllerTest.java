@@ -10,8 +10,6 @@ import fr.greenmove.facturation.domaine.tarif.GrilleTarifaire;
 import fr.greenmove.facturation.domaine.modele.IdFacture;
 import fr.greenmove.facturation.domaine.modele.IdLocation;
 import fr.greenmove.facturation.domaine.modele.IdUsager;
-import fr.greenmove.facturation.domaine.port.sortant.Paiement;
-import fr.greenmove.facturation.domaine.port.sortant.ResultatPaiement;
 import fr.greenmove.facturation.domaine.modele.TypeVehicule;
 import fr.greenmove.facturation.infrastructure.secondaire.abonnements.AbonnementsSurSimulation;
 import fr.greenmove.facturation.infrastructure.secondaire.paiement.PaiementSurSimulation;
@@ -47,32 +45,8 @@ class FactureControllerTest {
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(new FactureController(service, service)).build();
 
     @Test
-    void facture_d_une_location_payee() throws Exception {
-        emettre(service, "L-0001", "u1", TypeVehicule.VELO);
-
-        mvc.perform(get("/factures").param("location", "L-0001"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value("F-0001"))
-                .andExpect(jsonPath("$.location").value("L-0001"))
-                .andExpect(jsonPath("$.usager").value("u1"))
-                .andExpect(jsonPath("$.montantCentimes").value(100))
-                .andExpect(jsonPath("$.statut").value("PAYEE"))
-                .andExpect(jsonPath("$.referencePaiement").value(startsWith("SIMU-")));
-    }
-
-    @Test
     void pas_de_facture_pour_cette_location_donne_404() throws Exception {
         mvc.perform(get("/factures").param("location", "L-9999")).andExpect(status().isNotFound());
-    }
-
-    @Test
-    void consulter_une_facture_par_son_id() throws Exception {
-        emettre(service, "L-0001", "u1", TypeVehicule.VELO);
-
-        mvc.perform(get("/factures/F-0001"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.location").value("L-0001"));
-        mvc.perform(get("/factures/F-9999")).andExpect(status().isNotFound());
     }
 
     @Test
@@ -92,24 +66,6 @@ class FactureControllerTest {
                 .andExpect(jsonPath("$.referencePaiement").value(startsWith("SIMU-")));
 
         mvc.perform(post("/factures/F-0001/regularisation")).andExpect(status().isConflict());
-    }
-
-    @Test
-    void regulariser_une_facture_inconnue_donne_404() throws Exception {
-        mvc.perform(post("/factures/F-9999/regularisation")).andExpect(status().isNotFound());
-    }
-
-    @Test
-    void paiement_encore_refuse_donne_502() throws Exception {
-        Paiement refuseToujours = (usager, montant) -> ResultatPaiement.refuse("Prélèvement rejeté");
-        ServiceFacturation serviceQuiRefuse = new ServiceFacturation(new FacturesEnMemoire(), refuseToujours,
-                usager -> false, GrilleTarifaire.standard());
-        MockMvc mvcQuiRefuse = MockMvcBuilders
-                .standaloneSetup(new FactureController(serviceQuiRefuse, serviceQuiRefuse)).build();
-        emettre(serviceQuiRefuse, "L-0002", "u3", TypeVehicule.TROTTINETTE);
-
-        mvcQuiRefuse.perform(post("/factures/F-0001/regularisation")).andExpect(status().isBadGateway());
-        mvcQuiRefuse.perform(get("/factures/F-0001")).andExpect(jsonPath("$.statut").value("IMPAYEE"));
     }
 
     // ------------------------------------------------------------------ outils

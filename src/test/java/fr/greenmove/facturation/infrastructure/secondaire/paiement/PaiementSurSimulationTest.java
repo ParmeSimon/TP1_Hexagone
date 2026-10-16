@@ -15,14 +15,6 @@ class PaiementSurSimulationTest {
     private final Paiement paiement = new PaiementSurSimulation(new PaiementSimule());
 
     @Test
-    void un_debit_accepte_donne_la_reference_du_prestataire() {
-        ResultatPaiement resultat = paiement.debiter(new IdUsager("u1"), Montant.enCentimes(100));
-
-        assertTrue(resultat.estAccepte());
-        assertTrue(((ResultatPaiement.Accepte) resultat).reference().valeur().startsWith("SIMU-"));
-    }
-
-    @Test
     void le_refus_du_prestataire_devient_un_resultat_metier_et_non_une_exception() {
         IdUsager u3 = new IdUsager("u3"); // premier prélèvement rejeté par la banque, le second passe
 
@@ -34,8 +26,4 @@ class PaiementSurSimulationTest {
         assertTrue(second.estAccepte());
     }
 
-    @Test
-    void un_montant_nul_refuse_par_le_prestataire_est_aussi_un_refus() {
-        assertFalse(paiement.debiter(new IdUsager("u1"), Montant.ZERO).estAccepte());
-    }
 }

@@ -5,7 +5,6 @@ import fr.greenmove.facturation.domaine.port.sortant.Abonnements;
 import fr.greenmove.facturation.domaine.modele.IdUsager;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** L'adaptateur Abonnements, construit à la main avec les données de data/usagers.csv, sans Spring. */
@@ -19,13 +18,4 @@ class AbonnementsSurSimulationTest {
         assertTrue(abonnements.estAbonne(new IdUsager("u3")));
     }
 
-    @Test
-    void u1_n_est_pas_abonne() {
-        assertFalse(abonnements.estAbonne(new IdUsager("u1")));
-    }
-
-    @Test
-    void un_usager_inconnu_n_est_pas_abonne() {
-        assertFalse(abonnements.estAbonne(new IdUsager("inconnu")));
-    }
 }

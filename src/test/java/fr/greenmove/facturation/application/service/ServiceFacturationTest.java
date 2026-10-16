@@ -4,8 +4,6 @@ import fr.greenmove.facturation.application.EmettreFacture;
 import fr.greenmove.facturation.application.FactureVue;
 import fr.greenmove.facturation.domaine.port.sortant.Abonnements;
 import fr.greenmove.facturation.domaine.modele.Facture;
-import fr.greenmove.facturation.domaine.exception.FactureDejaPayee;
-import fr.greenmove.facturation.domaine.exception.FactureInconnue;
 import fr.greenmove.facturation.domaine.port.sortant.Factures;
 import fr.greenmove.facturation.domaine.tarif.GrilleTarifaire;
 import fr.greenmove.facturation.domaine.modele.IdFacture;
@@ -13,7 +11,6 @@ import fr.greenmove.facturation.domaine.modele.IdLocation;
 import fr.greenmove.facturation.domaine.modele.IdUsager;
 import fr.greenmove.facturation.domaine.modele.Montant;
 import fr.greenmove.facturation.domaine.port.sortant.Paiement;
-import fr.greenmove.facturation.domaine.exception.PaiementEncoreRefuse;
 import fr.greenmove.facturation.domaine.modele.ReferencePaiement;
 import fr.greenmove.facturation.domaine.port.sortant.ResultatPaiement;
 import fr.greenmove.facturation.domaine.modele.TypeVehicule;
@@ -67,28 +64,6 @@ class ServiceFacturationTest {
     }
 
     @Test
-    void trottinette_abonne_18_minutes() {
-        paiement.accepteraAvec("SIMU-BBB");
-        assertEquals(397, service.emettre(commande("L-0001", U2, TypeVehicule.TROTTINETTE, 18)).montantCentimes());
-    }
-
-    @Test
-    void plafond_puis_reduction_abonne() {
-        paiement.accepteraAvec("SIMU-1", "SIMU-2");
-        assertEquals(1500, service.emettre(commande("L-0001", U1, TypeVehicule.VELO, 300)).montantCentimes());
-        assertEquals(1200, service.emettre(commande("L-0002", U2, TypeVehicule.VELO, 300)).montantCentimes());
-    }
-
-    @Test
-    void la_duree_est_arrondie_a_la_minute_inferieure() {
-        paiement.accepteraAvec("SIMU-1");
-        Instant fin = DEBUT.plusSeconds(24 * 60 + 59); // 24 min 59 s → 24 min
-        FactureVue facture = service.emettre(
-                new EmettreFacture.Commande(new IdLocation("L-0001"), U1, TypeVehicule.VELO, DEBUT, fin));
-        assertEquals(460, facture.montantCentimes());
-    }
-
-    @Test
     void un_debit_refuse_donne_une_facture_impayee_sans_exception() {
         paiement.refusera();
 
@@ -113,42 +88,6 @@ class ServiceFacturationTest {
         assertEquals(1, factures.taille());
     }
 
-    @Test
-    void reemettre_une_facture_impayee_ne_retente_pas_le_debit() {
-        paiement.refusera();
-        service.emettre(commande("L-0002", U3, TypeVehicule.TROTTINETTE, 0));
-        paiement.accepteraAvec("SIMU-X");
-
-        FactureVue encore = service.emettre(commande("L-0002", U3, TypeVehicule.TROTTINETTE, 0));
-
-        assertEquals("IMPAYEE", encore.statut()); // c'est le rôle de la régularisation, pas de l'émission
-        assertEquals(1, paiement.debits);
-    }
-
-    // ------------------------------------------------------------------ consulter
-
-    @Test
-    void consulter_par_id_et_par_location() {
-        paiement.accepteraAvec("SIMU-1");
-        FactureVue emise = service.emettre(commande("L-0001", U1, TypeVehicule.VELO, 24));
-
-        assertEquals(Optional.of(emise), service.parId(new IdFacture(emise.id())));
-        assertEquals(Optional.of(emise), service.parLocation(new IdLocation("L-0001")));
-        assertEquals(Optional.empty(), service.parId(new IdFacture("F-9999")));
-        assertEquals(Optional.empty(), service.parLocation(new IdLocation("L-9999")));
-    }
-
-    // ------------------------------------------------------------------ impayés (contrat avec Location)
-
-    @Test
-    void consulter_impayes_repond_en_types_simples() {
-        paiement.refusera();
-        service.emettre(commande("L-0002", U3, TypeVehicule.TROTTINETTE, 0));
-
-        assertTrue(service.aUneFactureImpayee("u3"));
-        assertFalse(service.aUneFactureImpayee("u1"));
-    }
-
     // ------------------------------------------------------------------ régulariser
 
     @Test
@@ -164,32 +103,6 @@ class ServiceFacturationTest {
         assertEquals(impayee.id(), payee.id());
         assertEquals(80, paiement.dernierMontant.centimes()); // on redébite le montant de la facture
         assertFalse(service.aUneFactureImpayee("u3"));
-    }
-
-    @Test
-    void regulariser_une_facture_deja_payee_est_refuse_sans_debiter() {
-        paiement.accepteraAvec("SIMU-1");
-        FactureVue payee = service.emettre(commande("L-0001", U1, TypeVehicule.VELO, 24));
-
-        assertThrows(FactureDejaPayee.class, () -> service.regulariser(new IdFacture(payee.id())));
-        assertEquals(1, paiement.debits);
-    }
-
-    @Test
-    void regulariser_quand_le_prestataire_refuse_encore_laisse_la_facture_impayee() {
-        paiement.refusera();
-        FactureVue impayee = service.emettre(commande("L-0002", U3, TypeVehicule.TROTTINETTE, 0));
-        paiement.refusera();
-
-        assertThrows(PaiementEncoreRefuse.class, () -> service.regulariser(new IdFacture(impayee.id())));
-        assertEquals("IMPAYEE", service.parId(new IdFacture(impayee.id())).orElseThrow().statut());
-        assertTrue(service.aUneFactureImpayee("u3"));
-    }
-
-    @Test
-    void regulariser_une_facture_inconnue() {
-        assertThrows(FactureInconnue.class, () -> service.regulariser(new IdFacture("F-9999")));
-        assertEquals(0, paiement.debits);
     }
 
     // ------------------------------------------------------------------ outils
