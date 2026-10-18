@@ -123,3 +123,32 @@ sans rien démarrer, les hexagones tiennent. Tant qu'ils ont besoin de Spring ou
 
 La stack est libre : même API, mêmes règles, même séparation en deux hexagones, un bus interne ou l'équivalent.
 Dites-le en une ligne au début du dossier et indiquez comment lancer le projet et les tests.
+
+## Facturation : ports et adaptateurs
+
+Diagramme de composants : [`docs/facturation-composants.puml`](docs/facturation-composants.puml) (PlantUML). Tout ce qui y figure existe dans le code.
+
+```
+fr.greenmove.facturation
+├── domaine/                                   le coeur : aucune technique
+│   ├── modele/                                Facture, Montant, IdFacture, IdLocation, IdUsager, ReferencePaiement, StatutFacture, TypeVehicule
+│   ├── tarif/                                 GrilleTarifaire, GrilleTarifaireM01 (remplaçable)
+│   ├── exception/                             FactureInconnue, FactureDejaPayee, PaiementEncoreRefuse
+│   └── port/sortant/                          PORTS SORTANTS : Factures, Paiement (+ ResultatPaiement), Abonnements
+├── application/                               PORTS ENTRANTS : EmettreFacture, ConsulterFacture, RegulariserFacture,
+│   │                                          ConsulterImpayes (contrat avec Location, à ne pas déplacer), FactureVue
+│   └── service/                               ServiceFacturation : le cas d'usage, implémente les quatre ports entrants
+└── infrastructure/
+    ├── primaire/                              ADAPTATEURS PRIMAIRES : ils appellent un port entrant
+    │   ├── rest/                              FactureController (annexe A)
+    │   └── evenements/                        EcouteurLocationTerminee (@EventListener sur le bus)
+    ├── secondaire/                            ADAPTATEURS SECONDAIRES : ils implémentent un port sortant
+    │   ├── persistance/                       FacturesJpa, FactureMapper, FactureEntite, FactureJpaRepository (table facture)
+    │   ├── paiement/                          PaiementSurSimulation (DebitRefuse devient ResultatPaiement.Refuse)
+    │   └── abonnements/                       AbonnementsSurSimulation
+    └── config/                                ConfigurationFacturation : la racine de composition
+```
+
+Le sens des dépendances : un adaptateur dépend d'un port, jamais l'inverse ; le domaine ne dépend de rien ;
+`ServiceFacturation` ne reçoit que des ports. Les ports entrants restent dans `application` (et non dans un sous-dossier)
+parce que Location importe `fr.greenmove.facturation.application.ConsulterImpayes`.
