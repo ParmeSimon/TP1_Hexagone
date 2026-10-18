@@ -1,4 +1,7 @@
-package fr.greenmove.location.domaine;
+package fr.greenmove.location.domaine.ports;
+
+import fr.greenmove.location.domaine.modele.IdVehicule;
+import fr.greenmove.location.domaine.modele.Vehicule;
 
 import java.util.Optional;
 

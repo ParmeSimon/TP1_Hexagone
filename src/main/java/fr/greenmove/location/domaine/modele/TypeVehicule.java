@@ -1,4 +1,4 @@
-package fr.greenmove.location.domaine;
+package fr.greenmove.location.domaine.modele;
 
 /** Les deux types de véhicules de GreenMove. Location ne connaît pas leur tarif : c'est l'affaire de Facturation. */
 public enum TypeVehicule {
