@@ -1,7 +1,6 @@
 package fr.greenmove;
 
 import com.jayway.jsonpath.JsonPath;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -17,14 +16,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * Le scénario de l'annexe C de l'énoncé, joué à travers l'API : les deux hexagones et leur communication.
  *
- * <p>Désactivé dans le code de départ. Retirez {@code @Disabled} quand les deux hexagones sont câblés : s'il passe,
+ * <p>Activé : s'il passe,
  * l'événement traverse le bus, l'appel synchrone traverse le port, et l'échec du paiement est traité.
  * Il ne contrôle pas le temps : les locations durent 0 minute, donc 100 centimes (80 pour un abonné).
  * Les durées se testent dans le domaine, avec votre port Horloge.</p>
  */
 @SpringBootTest
 @AutoConfigureMockMvc
-@Disabled("À activer quand les deux hexagones sont câblés (annexe C de l'énoncé)")
 class ScenarioBoutEnBoutTest {
 
     @Autowired
