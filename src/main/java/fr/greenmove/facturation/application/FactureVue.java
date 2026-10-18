@@ -1,7 +1,7 @@
 package fr.greenmove.facturation.application;
 
-import fr.greenmove.facturation.domaine.Facture;
-import fr.greenmove.facturation.domaine.ReferencePaiement;
+import fr.greenmove.facturation.domaine.modele.Facture;
+import fr.greenmove.facturation.domaine.modele.ReferencePaiement;
 
 /**
  * Ce que les ports entrants renvoient : une photo de la facture, en types simples, qui correspond au corps de

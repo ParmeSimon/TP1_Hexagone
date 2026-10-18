@@ -1,8 +1,8 @@
 package fr.greenmove.facturation.application;
 
-import fr.greenmove.facturation.domaine.IdLocation;
-import fr.greenmove.facturation.domaine.IdUsager;
-import fr.greenmove.facturation.domaine.TypeVehicule;
+import fr.greenmove.facturation.domaine.modele.IdLocation;
+import fr.greenmove.facturation.domaine.modele.IdUsager;
+import fr.greenmove.facturation.domaine.modele.TypeVehicule;
 
 import java.time.Duration;
 import java.time.Instant;

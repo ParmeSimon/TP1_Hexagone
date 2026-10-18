@@ -1,9 +1,9 @@
 package fr.greenmove.facturation.application;
 
-import fr.greenmove.facturation.domaine.FactureDejaPayee;
-import fr.greenmove.facturation.domaine.FactureInconnue;
-import fr.greenmove.facturation.domaine.IdFacture;
-import fr.greenmove.facturation.domaine.PaiementEncoreRefuse;
+import fr.greenmove.facturation.domaine.exception.FactureDejaPayee;
+import fr.greenmove.facturation.domaine.exception.FactureInconnue;
+import fr.greenmove.facturation.domaine.modele.IdFacture;
+import fr.greenmove.facturation.domaine.exception.PaiementEncoreRefuse;
 
 /** Port entrant : nouvelle tentative de débit pour une facture impayée. */
 public interface RegulariserFacture {
